@@ -1,34 +1,30 @@
-name: Build ScreenDubArabic APK
-
+name: Build APK
 on:
+  push:
   workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Extract project ZIP
-        run: |
-          unzip -o ScreenDubArabic-v0.3.zip -d project
-          find project -name gradlew -exec chmod +x {} \;
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
-
-      - name: Build APK
-        run: |
-          cd project
-          ./gradlew assembleDebug
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - uses: gradle/actions/setup-gradle@v4
         with:
-          name: ScreenDubArabic-APK
-          path: project/**/build/outputs/apk/debug/*.apk
+          gradle-version: 8.9
+      - name: Unzip project
+        run: |
+          ZIP=$(ls ScreenDubArabic-v0*.zip | sort -V | tail -1)
+          unzip -q -o "$ZIP"
+      - name: Arabic OCR model
+        working-directory: ScreenDubArabic
+        run: curl -L -o app/src/main/assets/tessdata/ara.traineddata https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/main/ara.traineddata
+      - name: Build APK
+        working-directory: ScreenDubArabic
+        run: gradle assembleRelease --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ScreenDubArabic-apk
+          path: ScreenDubArabic/app/build/outputs/apk/release/*.apk
