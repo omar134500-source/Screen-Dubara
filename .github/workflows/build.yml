@@ -18,6 +18,11 @@ jobs:
         run: |
           ZIP=$(ls ScreenDubArabic-v0*.zip | sort -V | tail -1)
           unzip -q -o "$ZIP"
+      - name: Add JitPack repository
+        working-directory: ScreenDubArabic
+        run: |
+          sed -i 's|mavenCentral() } }$|mavenCentral(); maven { url = uri("https://jitpack.io") } } }|' settings.gradle.kts
+          cat settings.gradle.kts
       - name: Arabic OCR model
         working-directory: ScreenDubArabic
         run: curl -L -o app/src/main/assets/tessdata/ara.traineddata https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/main/ara.traineddata
@@ -28,3 +33,4 @@ jobs:
         with:
           name: ScreenDubArabic-apk
           path: ScreenDubArabic/app/build/outputs/apk/release/*.apk
+        
